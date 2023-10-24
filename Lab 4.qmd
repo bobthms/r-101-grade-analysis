@@ -1,0 +1,150 @@
+---
+title: "Lab 4"
+format: html
+editor: visual
+---
+
+## Lab 4
+
+### Question 1
+
+```{r}
+library(tidyverse)
+library(here)
+here::i_am("r-101-grade-analysis.Rproj")
+data <- read.csv("grades.csv")
+```
+### Question 2
+
+```{r}
+library(dplyr)
+library(knitr)
+grades_summary <- data %>%
+  summarise(
+    Min = min(Exam, na.rm = TRUE),
+    Max = max(Exam, na.rm = TRUE),
+    Med = median(Exam, na.rm = TRUE),
+    Mean = mean(Exam, na.rm = TRUE)
+  )
+kable(grades_summary)
+
+```
+
+### Question 3
+
+```{r}
+NA_count <- sum(is.na(data$Exam))
+
+# Create a sentence for the result
+result_sentence <- paste("Le nb d'étudiants n'ayant pas passé le partiel est :", NA_count)
+result_sentence
+```
+
+### Question 4
+
+```{r}
+ggplot(data, aes(x = Exam, fill = ..count..)) +
+  geom_histogram(binwidth = 1, color = "black", fill = "blue") +
+  labs(title = "Distribution des notes de l'examen",
+       x = "Notes",
+       y = "Nombre") + theme_minimal()
+
+```
+
+### Question 5
+
+```{r}
+nb_group <- data %>%
+  group_by(Group) %>%
+  summarize(Count = n())
+#On garde quand même les étudiants n'ayant pas de notes car ils appartiennent à un groupe
+kable(nb_group)
+```
+### Question 6
+
+```{r}
+ggplot(nb_group, aes(x = Group, y = Count)) +
+  geom_bar(stat = "identity", fill = "blue") +
+  labs(title = "Nb d'étudiant dans chaque groupe",
+       x = "Groupe",
+       y = "Nombre d'étudiants") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45,hjust = 1))
+```
+
+### Question 7
+
+```{r}
+boxplot <- ggplot(data, aes(x = Group, y = Exam)) +
+  geom_boxplot(fill = "blue") +
+  labs(title = "Distribution des notes par groupe",
+       x = "Groupe",
+       y = "Notes") +
+  theme_minimal()
+print(boxplot)
+
+violinplot <- ggplot(data, aes(x = Group, y = Exam)) +
+  geom_violin(fill = "blue") +
+  labs(title = "Distribution des notes par groupe",
+       x = "Groupe",
+       y = "Notes") +
+  theme_minimal()
+print(violinplot)
+
+```
+
+### Question 8
+
+```{r}
+nb_exam_manqués <- data %>%
+  group_by(Group) %>%
+  summarize(nombre_d_exams_manqués = sum(is.na(Exam)))
+nb_exam_manqués
+```
+### Question 9
+```{r}
+ggplot(nb_exam_manqués, aes(x = Group, y = nombre_d_exams_manqués)) +
+  geom_col(fill = "blue") +
+  labs(title = "Nombre d'étudiants ayant manqué le partiel par groupe",
+       x = "Groupe",
+       y = "Nombre d'étudiants ayant manqué le partiel") +
+  theme_minimal()
+```
+### question 10
+
+```{r}
+long_data <- data %>%
+  pivot_longer(cols = -c(Id, Group), 
+               names_to = "name", 
+               values_to = "value")
+```
+
+### Question 11
+
+```{r}
+nb_notes_manquantes <- long_data %>%
+  group_by(Id) %>%
+  summarize(nb_exams_manqués = sum(is.na(value)))
+
+nb_notes_manquantes
+```
+### Question 12
+
+```{r}
+ggplot(nb_notes_manquantes, aes(x = nb_exams_manqués)) +
+  geom_histogram(binwidth = 1, color = "black", fill = "blue") +
+  labs(title = "Distribution des notes manquantes par étudiants",
+       x = "Nombre de notes manquantes",
+       y = "nombre d'étudiants") 
+```
+### Question 13
+
+```{r}
+nb_notes_manquantes_long <- long_data %>%
+  filter(str_starts(name, "MCQ")) %>%
+  group_by(Id) %>%
+  summarize(nb_notes_manquantes = sum(is.na(value)))
+
+nb_notes_manquantes_long
+```
+
